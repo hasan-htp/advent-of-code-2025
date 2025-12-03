@@ -1,4 +1,4 @@
 build/
 *.out
-*.txt
+*input.txt
 .vscode/
