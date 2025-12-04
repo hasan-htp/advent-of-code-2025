@@ -43,6 +43,8 @@ bool check_eight_adjacent(const data &rows, size_t j, size_t i) {
     return false;
 }
 
+namespace part1 {
+
 int solution(const data &rows) {
     int rolls = 0;
     for (size_t i = 0; i < rows.size(); ++i) {
@@ -54,6 +56,31 @@ int solution(const data &rows) {
     }
     return rolls;
 }
+} // namespace part1
+
+namespace part2 {
+
+int solution(data &rows) {
+    int total_rolls = 0;
+
+    while (true) {
+        int rolls = 0;
+        for (size_t i = 0; i < rows.size(); ++i) {
+            for (size_t j = 0; j < rows[0].size(); ++j) {
+                if (rows[i][j] == '@' && check_eight_adjacent(rows, i, j)) {
+                    rows[i][j] = '.';
+                    rolls++;
+                }
+            }
+        }
+        total_rolls += rolls;
+        if (rolls == 0) {
+            break;
+        }
+    }
+    return total_rolls;
+}
+} // namespace part2
 
 auto reader(const std::string &path) {
     data ret;
@@ -82,8 +109,9 @@ int main(int argc, char **argv) {
 
     const std::string path = argv[1];
 
-    const auto input = reader(path);
-    std::cout << solution(input) << std::endl;
+    auto input = reader(path);
+    std::cout << part1::solution(input) << std::endl;
+    std::cout << part2::solution(input) << std::endl;
 
     return 0;
 }
