@@ -14,6 +14,7 @@ struct data {
     char operation;
 };
 
+namespace part1 {
 std::vector<data> reader(const std::string &path) {
 
     size_t data_size = 0;
@@ -65,7 +66,93 @@ std::vector<data> reader(const std::string &path) {
     return data;
 }
 
-namespace part1 {
+} // namespace part1
+
+namespace part2 {
+
+std::vector<data> reader(const std::string &path) {
+
+    std::vector<std::string> rows;
+    std::string line;
+
+    {
+        std::ifstream ifs(path);
+        while (std::getline(ifs, line)) {
+            rows.push_back(line);
+        }
+    }
+
+    std::string op_row = rows.back();
+    rows.pop_back();
+
+    size_t width = 0;
+    for (auto &r : rows) {
+        width = std::max(width, r.size());
+    }
+    width = std::max(width, op_row.size());
+
+    for (auto &r : rows) {
+        r.resize(width, ' ');
+    }
+
+    std::vector<std::vector<int>> groups;
+    bool in_group = false;
+
+    for (int c = static_cast<int>(width) - 1; c >= 0; --c) {
+        bool empty = true;
+        for (auto &r : rows)
+            if (r[c] != ' ') {
+                empty = false;
+            }
+
+        if (!empty && !in_group) {
+            groups.emplace_back();
+            in_group = true;
+        }
+        if (!empty) {
+            groups.back().push_back(c);
+        }
+        if (empty && in_group) {
+            in_group = false;
+        }
+    }
+
+    size_t data_size = groups.size();
+    std::vector<data> result(data_size);
+
+    {
+        std::stringstream ssop;
+        ssop << op_row;
+
+        size_t op_index = data_size - 1; // to reverse
+        char c = '0';
+        while (ssop >> c) {
+            result[op_index].operation = c;
+            op_index--;
+        }
+    }
+
+    for (size_t i = 0; i < data_size; ++i) {
+        auto &cols = groups[i];
+
+        for (int col : cols) {
+            std::string digits;
+            for (const auto &r : rows) {
+                if (r[col] != ' ')
+                    digits.push_back(r[col]);
+            }
+            if (!digits.empty()) {
+                result[i].numbers.push_back(std::stoull(digits));
+            }
+        }
+
+        std::reverse(result[i].numbers.begin(), result[i].numbers.end());
+    }
+
+    return result;
+}
+
+} // namespace part2
 
 uint64_t solution(const std::vector<data> &alldata) {
     uint64_t sum = 0;
@@ -77,7 +164,6 @@ uint64_t solution(const std::vector<data> &alldata) {
                });
     });
 }
-} // namespace part1
 
 int main(int argc, char **argv) {
 
@@ -88,10 +174,14 @@ int main(int argc, char **argv) {
 
     const std::string path = argv[1];
 
-    auto input = reader(path);
-
-    std::cout << part1::solution(input) << std::endl;
-    // std::cout << part2::solution(input) << std::endl;
+    {
+        auto input = part1::reader(path);
+        std::cout << solution(input) << std::endl;
+    }
+    {
+        auto input = part2::reader(path);
+        std::cout << solution(input) << std::endl;
+    }
 
     return 0;
 }
