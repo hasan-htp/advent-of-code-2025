@@ -6,3 +6,4 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(day_1)
 add_subdirectory(day_6)
+add_subdirectory(day_8)
