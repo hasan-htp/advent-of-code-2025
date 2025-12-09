@@ -75,6 +75,8 @@ int solution(const std::vector<Point> &points) {
 
     int group_id = 0;
     int connection_size = 0;
+
+    // 1000 for my input, 10 for default input, lazy enough to not put it as main argument
     while (connection_size < 1000) {
         auto shortest = distances.top();
         distances.pop();
@@ -106,9 +108,6 @@ int solution(const std::vector<Point> &points) {
         }
         connection_size++;
     }
-    // for (auto &[id, size] : connected) {
-    //     std::cout << "connected: id: " << id << " gr:" << size << std::endl;
-    // }
 
     std::vector<int> sizes;
     sizes.reserve(group_size.size());
@@ -118,6 +117,62 @@ int solution(const std::vector<Point> &points) {
     std::sort(sizes.begin(), sizes.end(), std::greater<>());
 
     return sizes[0] * sizes[1] * sizes[2];
+}
+
+uint64_t solution2(const std::vector<Point> &points) {
+    std::unordered_map<size_t, int> connected; // inbdex -> group id
+    std::unordered_set<int> groups;            // groups
+
+    auto cmp = [](const Entry &a, const Entry &b) { return a.distance > b.distance; };
+
+    std::priority_queue<Entry, std::vector<Entry>, decltype(cmp)> distances(cmp);
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        for (size_t j = i + 1; j < points.size(); ++j) {
+            auto new_dis = points[i].distance(points[j]);
+            distances.push(Entry{
+                .distance = new_dis,
+                .i = i,
+                .j = j,
+            });
+        }
+    }
+    int group_id = 0;
+
+    Entry shortest{};
+
+    while (!(connected.size() == points.size() && groups.size() == 1)) {
+        shortest = distances.top();
+        distances.pop();
+
+        if (!connected.contains(shortest.i) && !connected.contains(shortest.j)) {
+            connected[shortest.i] = group_id;
+            connected[shortest.j] = group_id;
+            groups.insert(group_id);
+            group_id++;
+
+        } else if (connected.contains(shortest.i) && !connected.contains(shortest.j)) {
+            connected[shortest.j] = connected[shortest.i];
+
+        } else if (connected.contains(shortest.j) && !connected.contains(shortest.i)) {
+            connected[shortest.i] = connected[shortest.j];
+
+        } else if (connected.contains(shortest.i) && connected.contains(shortest.j)) {
+            int gi = connected[shortest.i];
+            int gj = connected[shortest.j];
+
+            if (gi != gj) {
+                for (auto &[idx, group] : connected) {
+                    if (group == gj) {
+                        group = gi;
+                    }
+                }
+                groups.erase(gj);
+            }
+        }
+    }
+
+    return static_cast<uint64_t>(points[shortest.i].x) * static_cast<uint64_t>(points[shortest.j].x);
 }
 
 int main(int argc, char **argv) {
@@ -132,6 +187,7 @@ int main(int argc, char **argv) {
     auto input = reader(path);
 
     std::cout << solution(input) << std::endl;
+    std::cout << solution2(input) << std::endl;
 
     return 0;
 }
