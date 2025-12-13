@@ -15,7 +15,15 @@ std::vector<std::string> reader(const std::string &path) {
         std::string line;
         std::getline(ifs, line);
         while (std::getline(ifs, line)) {
+
             output.push_back(std::move(line));
+        }
+    }
+
+    for (size_t i = 1; i < output.size() - 1; i++) {
+        if (output[i].find('^') == std::string::npos) {
+            output.erase(output.begin() + i);
+            i--;
         }
     }
 
@@ -46,6 +54,45 @@ uint64_t solution(std::vector<std::string> &input) {
     return split_count;
 }
 
+uint64_t count(const std::vector<std::string> &input, std::vector<std::vector<uint64_t>> &dp, size_t row, size_t col) {
+
+    size_t rows = input.size();
+    size_t cols = input[0].size();
+
+    if (row == rows - 2) {
+        return 1;
+    }
+
+    if (dp[row][col] != -1) {
+        return dp[row][col];
+    }
+
+    dp[row][col] = 0;
+    auto below = input[row + 1][col];
+
+    if (below == '.') {
+        dp[row][col] = count(input, dp, row + 1, col);
+    } else if (below == '^') {
+        if (col > 0) {
+            dp[row][col] += count(input, dp, row + 1, col - 1);
+        }
+        if (col + 1 < cols) {
+            dp[row][col] += count(input, dp, row + 1, col + 1);
+        }
+    }
+
+    return dp[row][col];
+}
+
+uint64_t solution_2(const std::vector<std::string> &input) {
+    size_t rows = input.size();
+    size_t cols = input[0].size();
+    size_t mid = cols / 2;
+
+    std::vector<std::vector<uint64_t>> dp(rows, std::vector<uint64_t>(cols, -1));
+    return count(input, dp, 0, mid);
+}
+
 int main(int argc, char **argv) {
 
     if (argc != 2) {
@@ -56,17 +103,10 @@ int main(int argc, char **argv) {
     const std::string path = argv[1];
 
     auto input = reader(path);
-
-    for (const auto line : input) {
-        std::cout << line << std::endl;
-    }
-
-    std::cout << std::endl;
+    auto input2 = input;
 
     std::cout << solution(input) << std::endl;
+    std::cout << solution_2(input2) << std::endl;
 
-    for (const auto line : input) {
-        std::cout << line << std::endl;
-    }
     return 0;
 }
